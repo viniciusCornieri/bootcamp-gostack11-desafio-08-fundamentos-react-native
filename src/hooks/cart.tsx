@@ -36,36 +36,43 @@ const CartProvider: React.FC = ({ children }) => {
     loadProducts();
   }, []);
 
-  const addToCart = useCallback(
-    async product => {
-      const foundProductIndex = products.findIndex(p => p.id === product.id);
-      if (foundProductIndex >= 0) {
-        const productsClone = [...products];
-
-        const productWithIncrementedQuantity = productsClone[foundProductIndex];
-        productWithIncrementedQuantity.quantity += 1;
-
-        productsClone.splice(
-          foundProductIndex,
-          1,
-          productWithIncrementedQuantity,
-        );
-
-        setProducts(productsClone);
-      } else {
-        setProducts(prevState => [...prevState, { ...product, quantity: 1 }]);
-      }
+  const increment = useCallback(
+    async id => {
+      setProducts(
+        products.map(product =>
+          product.id === id
+            ? { ...product, quantity: product.quantity + 1 }
+            : product,
+        ),
+      );
     },
     [products],
   );
 
-  const increment = useCallback(async id => {
-    // TODO INCREMENTS A PRODUCT QUANTITY IN THE CART
-  }, []);
+  const decrement = useCallback(
+    async id => {
+      const decrementedProducts = products.map(product =>
+        product.id === id
+          ? { ...product, quantity: product.quantity - 1 }
+          : product,
+      );
 
-  const decrement = useCallback(async id => {
-    // TODO DECREMENTS A PRODUCT QUANTITY IN THE CART
-  }, []);
+      setProducts(decrementedProducts.filter(product => product.quantity > 0));
+    },
+    [products],
+  );
+
+  const addToCart = useCallback(
+    async product => {
+      const foundProduct = products.find(p => p.id === product.id);
+      if (foundProduct) {
+        increment(product.id);
+      } else {
+        setProducts([...products, { ...product, quantity: 1 }]);
+      }
+    },
+    [products, increment],
+  );
 
   const value = React.useMemo(
     () => ({ addToCart, increment, decrement, products }),
